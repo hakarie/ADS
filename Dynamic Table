@@ -1,0 +1,77 @@
+#include<iostream>
+using namespace std;
+class DynamicTable{
+        private:
+                int *table;
+                int capacity;
+                int size;
+        public:
+                DynamicTable(int initialCapacity){
+                        capacity = initialCapacity;
+                        size = 0;
+                        table = new int[capacity];
+                }
+                void insert(int value){
+                        int cost = 1;
+                        if(size == capacity){
+                                resize();
+                                cost = capacity * 2;
+                        }
+                        table[size] = value;
+                        size++;
+                        cout<<"Inserted Value: "<<value<<", Cost : "<<cost<<", Capacity:"<<capacity<<endl;
+                }
+                void resize(){
+                        int newCapacity = capacity * 2;
+                        int *newTable = new int[newCapacity];
+                        for(int i = 0; i < size; i++){
+                                newTable[i] = table[i];
+                        }
+                        delete[] table;
+                        table = newTable;
+                        newTable = nullptr;
+                        capacity = newCapacity;
+                        cout<<"Resized Table to Capacity : "<<capacity<<endl;
+                }
+                void display(){
+                        cout<<"Dynamic Table: ";
+                        for(int i = 0; i < size; i++){
+                                cout<<table[i]<<" ";
+                        }
+                        cout<<"\nSize : "<<size<<", Capacity : "<<capacity<<endl;
+                }
+                ~DynamicTable(){
+                        delete[] table;
+                 }
+};
+
+int main(){
+        int choice;
+        DynamicTable dt(2);
+        do{
+                cout<<"Dynamic Table"<<"\n";
+                cout<<"1.insert a value"<<endl;
+                cout<<"2.Display Table"<<endl;
+                cout<<"3.Exit"<<endl;
+                cout<<"Enter your choice : ";
+                cin>>choice;
+                switch(choice){
+                        case 1:
+                                int value;
+                                cout<<"Enter a value to insert : ";
+                                cin>>value;
+                                dt.insert(value);
+                                break;
+                        case 2:
+                                dt.display();
+                                break;
+                        case 3:
+                                cout<<"Exit";
+                                break;
+                        default:
+                                cout<<"Error"<<endl;
+                }
+        }while(choice != 3);
+        
+        return 0;
+}
