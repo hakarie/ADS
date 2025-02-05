@@ -1,0 +1,108 @@
+POTENTIAL METHOD
+
+#include<iostream>
+using namespace std;
+int main()
+{
+	int size=4;
+	int bits[4]={0};
+	int cost=0;
+	 int amortizedCost = 0;
+    int potentialBefore = 0, potentialAfter = 0;
+    int totalCost  = 0;
+	cout<<"Binary"<<"  "<<"Acutal Cost"<<"  fi(Di)"<<" fi(Di-1)"<<" PotentialDifference"<<" Amortized cost"<<endl;
+	    for (int j = size - 1; j >= 0; j--) {
+        cout << bits[j];
+    }
+    
+   cout<<"    "<<cost<<" flips"
+             << "       " << potentialAfter
+             << "        " << potentialBefore
+             << "             " << 0
+             << "                " << amortizedCost
+             << endl;
+	for(int i=0;i<8;i++){
+		int carry=1;
+		int cost=0;
+	for(int j=0;j<size && carry==1;j++)
+	{
+		if(bits[j]==0)
+		{
+			bits[j]=1;
+			carry=0;
+			cost++;
+		}
+		else
+		{
+			bits[j]=0;
+			carry=1;
+			cost++;
+		}
+	}
+	 potentialBefore = potentialAfter;
+	  potentialAfter = 0;
+        for (int j = 0; j < size; j++) {
+            if (bits[j] == 1) {
+                potentialAfter++;
+            }
+        }
+    int potentialDifference = potentialAfter - potentialBefore;
+        amortizedCost = cost + potentialDifference;
+	for(int j=size-1;j>=0;j--)
+	{
+		cout<<bits[j];
+	}
+	cout<<"    "<<cost<<" flips"
+             << "       " << potentialAfter
+             << "        " << potentialBefore
+             << "             " << potentialDifference
+             << "                " << amortizedCost
+             << endl;
+	cout<<endl;
+	totalCost += amortizedCost;
+	}
+	cout<<"\nTotal Amortized Cost = "<<totalCost<<endl;
+	return 0;
+}
+
+
+
+
+
+AGGREGATE METHOD
+
+#include<iostream>
+using namespace std;
+int main()
+{
+	int size=4;
+	int bits[4]={0};
+	int cost=0;
+	cout<<"Binary"<<"  "<<"Cost"<<endl;
+	for(int i=0;i<8;i++){
+		int carry=1;
+	for(int j=0;j<size&& carry==1;j++)
+	{
+		if(bits[j]==0)
+		{
+			bits[j]=1;
+			carry=0;
+			cost++;
+		}
+		else
+		{
+			bits[j]=0;
+			carry=1;
+			cost++;
+		}
+	}
+	for(int j=size-1;j>=0;j--)
+	{
+		cout<<bits[j];
+	}
+	cout<<"    "<<"Cost:"<<cost;
+	cout<<endl;
+	}
+	cout<<"Amortized cost="<<cost;
+	return 0;
+}
