@@ -1,0 +1,199 @@
+#include <iostream>
+#include <cmath>
+#include <vector>
+using namespace std;
+
+// Node structure for Fibonacci Heap
+struct Node {
+    int key;
+    int degree;
+    Node* parent;
+    Node* child;
+    Node* left;
+    Node* right;
+    bool marked;
+
+    Node(int value) {
+        key = value;
+        degree = 0;
+        parent = child = nullptr;
+        left = right = this; // Circular doubly linked list
+        marked = false;
+    }
+};
+
+// Fibonacci Heap class
+class FibonacciHeap {
+private:
+    Node* minNode; // Pointer to the minimum node
+    int nodeCount;
+
+    // Merge two circular doubly linked lists
+    void mergeLists(Node*& a, Node* b) {
+        if (!a) { 
+            a = b; 
+            return; 
+        }
+        if (!b) return;
+
+        Node* aRight = a->right;
+        Node* bLeft = b->left;
+
+        a->right = b;
+        b->left = a;
+        aRight->left = bLeft;
+        bLeft->right = aRight;
+    }
+
+    // Links node y as a child of node x
+    void link(Node* y, Node* x) {
+        // Remove y from root list
+        y->left->right = y->right;
+        y->right->left = y->left;
+
+        // Make y a child of x
+        y->parent = x;
+        y->left = y->right = y;
+        if (!x->child) {
+            x->child = y;
+        } else {
+            mergeLists(x->child, y);
+        }
+        x->degree++;
+        y->marked = false;
+    }
+
+    // Consolidates trees after extractMin
+    void consolidate() {
+        int maxDegree = log2(nodeCount) + 2; // Ensure we have enough space
+        vector<Node*> degreeTable(maxDegree, nullptr);
+
+        vector<Node*> rootList;
+        Node* current = minNode;
+        if (!current) return;
+
+        Node* start = current;
+        do {
+            rootList.push_back(current);
+            current = current->right;
+        } while (current != start);
+
+        for (Node* x : rootList) {
+            int d = x->degree;
+            while (degreeTable[d]) {
+                Node* y = degreeTable[d];
+                if (x->key > y->key) swap(x, y);
+                link(y, x);
+                degreeTable[d] = nullptr;
+                d++;
+            }
+            degreeTable[d] = x;
+        }
+
+        // Find new minNode
+        minNode = nullptr;
+        for (Node* node : degreeTable) {
+            if (node) {
+                if (!minNode || node->key < minNode->key) {
+                    minNode = node;
+                }
+            }
+        }
+    }
+
+public:
+    FibonacciHeap() : minNode(nullptr), nodeCount(0) {}
+
+    // Insert a new key
+    void insert(int key) {
+        Node* newNode = new Node(key);
+        if (!minNode) {
+            minNode = newNode;
+        } else {
+            mergeLists(minNode, newNode);
+            if (newNode->key < minNode->key) {
+                minNode = newNode;
+            }
+        }
+        nodeCount++;
+    }
+
+    // Get the minimum key
+    int getMin() {
+        if (!minNode) throw runtime_error("Heap is empty");
+        return minNode->key;
+    }
+
+    // Extract the minimum key
+    void extractMin() {
+        if (!minNode) throw runtime_error("Heap is empty");
+
+        Node* oldMin = minNode;
+
+        if (minNode->child) {
+            Node* child = minNode->child;
+            Node* start = child;
+            do {
+                child->parent = nullptr;
+                child = child->right;
+            } while (child != start);
+
+            mergeLists(minNode, minNode->child);
+            minNode->child = nullptr; // Prevent dangling pointers
+        }
+
+        // Remove minNode from root list
+        if (minNode->right == minNode) {
+            minNode = nullptr;
+        } else {
+            minNode->left->right = minNode->right;
+            minNode->right->left = minNode->left;
+            minNode = minNode->right;
+            consolidate();
+        }
+
+        delete oldMin;
+        nodeCount--;
+    }
+
+    // Print heap elements
+    void printHeap(Node* node, int depth = 0) {
+        if (!node) return;
+        Node* start = node;
+        do {
+            cout << string(depth * 2, ' ') << node->key << endl;
+            if (node->child) printHeap(node->child, depth + 1);
+            node = node->right;
+        } while (node != start);
+    }
+
+    void display() {
+        if (!minNode) {
+            cout << "Heap is empty.\n";
+            return;
+        }
+        cout << "Fibonacci Heap:\n";
+        printHeap(minNode);
+    }
+};
+
+// Driver Code
+int main() {
+    FibonacciHeap heap;
+
+    // Insert elements
+    heap.insert(10);
+    heap.insert(20);
+    heap.insert(30);
+    heap.insert(5);
+    heap.insert(1);
+
+    heap.display();
+    cout << "Minimum: " << heap.getMin() << endl;
+
+    cout << "Extracting min...\n";
+    heap.extractMin();
+    heap.display();
+
+    return 0;
+}
