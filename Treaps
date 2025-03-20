@@ -1,0 +1,117 @@
+#include <iostream>
+
+using namespace std;
+
+// Structure for Treap Node
+struct Node {
+    int key;
+    int priority;
+    Node* left;
+    Node* right;
+};
+
+// Function to create a new node with user-defined priority
+Node* createNode(int key, int priority) {
+    Node* newNode = new Node;
+    newNode->key = key;
+    newNode->priority = priority; // User-defined priority
+    newNode->left = newNode->right = nullptr;
+    return newNode;
+}
+
+// Right rotation
+Node* rotateRight(Node* y) {
+    Node* x = y->left;
+    y->left = x->right;
+    x->right = y;
+    return x;
+}
+
+// Left rotation
+Node* rotateLeft(Node* x) {
+    Node* y = x->right;
+    x->right = y->left;
+    y->left = x;
+    return y;
+}
+
+// Insert a key with user-defined priority into the Treap
+Node* insert(Node* root, int key, int priority) {
+    if (!root) return createNode(key, priority);
+
+    if (key < root->key) {
+        root->left = insert(root->left, key, priority);
+        if (root->left->priority > root->priority)
+            root = rotateRight(root);
+    } else {
+        root->right = insert(root->right, key, priority);
+        if (root->right->priority > root->priority)
+            root = rotateLeft(root);
+    }
+    return root;
+}
+
+// Delete a key from the Treap
+Node* deleteNode(Node* root, int key) {
+    if (!root) return nullptr;
+
+    if (key < root->key)
+        root->left = deleteNode(root->left, key);
+    else if (key > root->key)
+        root->right = deleteNode(root->right, key);
+    else {
+        if (!root->left) {
+            Node* temp = root->right;
+            delete root;
+            return temp;
+        } else if (!root->right) {
+            Node* temp = root->left;
+            delete root;
+            return temp;
+        } else {
+            if (root->left->priority > root->right->priority) {
+                root = rotateRight(root);
+                root->right = deleteNode(root->right, key);
+            } else {
+                root = rotateLeft(root);
+                root->left = deleteNode(root->left, key);
+            }
+        }
+    }
+    return root;
+}
+
+// Inorder traversal (to check sorted order)
+void inorder(Node* root) {
+    if (root) {
+        inorder(root->left);
+        cout << "(" << root->key << ", " << root->priority << ") ";
+        inorder(root->right);
+    }
+}
+
+// Driver Code
+int main() {
+    Node* root = nullptr;
+
+    // Insert nodes with user-defined priorities
+    root = insert(root, 50, 30);
+    root = insert(root, 30, 40);
+    root = insert(root, 70, 20);
+    root = insert(root, 20, 50);
+    root = insert(root, 40, 25);
+    root = insert(root, 60, 35);
+    root = insert(root, 80, 15);
+
+    cout << "Treap Inorder Traversal (key, priority):\n";
+    inorder(root);
+    cout << endl;
+
+    // Delete a node
+    root = deleteNode(root, 40);
+    cout << "After deleting 40:\n";
+    inorder(root);
+    cout << endl;
+
+    return 0;
+}
