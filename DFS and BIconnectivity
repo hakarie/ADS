@@ -1,0 +1,77 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+class Graph {
+    int V;
+    vector<vector<int>> adj;
+    vector<int> disc, low, parent;
+    vector<bool> articulationPoint;
+    vector<pair<int, int>> bridges;
+    int time;
+
+    void DFS(int u) {
+        disc[u] = low[u] = ++time;
+        int children = 0;
+
+        for (int v : adj[u]) {
+            if (disc[v] == -1) { 
+                children++;
+                parent[v] = u;
+                DFS(v);
+
+                low[u] = min(low[u], low[v]);
+
+                if (parent[u] == -1 && children > 1)
+                    articulationPoint[u] = true;
+                if (parent[u] != -1 && low[v] >= disc[u])
+                    articulationPoint[u] = true;
+                if (low[v] > disc[u])
+                    bridges.push_back({u, v});
+            } else if (v != parent[u]) {
+                low[u] = min(low[u], disc[v]);
+            }
+        }
+    }
+
+public:
+    Graph(int V) : V(V), adj(V), disc(V, -1), low(V, -1), parent(V, -1), articulationPoint(V, false), time(0) {}
+
+    void addEdge(int u, int v) {
+        adj[u].push_back(v);
+        adj[v].push_back(u);
+    }
+
+    void findBiConnectivity() {
+        for (int i = 0; i < V; i++) {
+            if (disc[i] == -1)
+                DFS(i);
+        }
+
+        cout << "Articulation Points: ";
+        for (int i = 0; i < V; i++) {
+            if (articulationPoint[i])
+                cout << i << " ";
+        }
+        cout << endl;
+
+        cout << "Bridges: ";
+        for (auto &bridge : bridges) {
+            cout << "(" << bridge.first << ", " << bridge.second << ") ";
+        }
+        cout << endl;
+    }
+};
+
+int main() {
+    Graph g(5);
+    g.addEdge(0, 1);
+    g.addEdge(0, 2);
+    g.addEdge(1, 2);
+    g.addEdge(1, 3);
+    g.addEdge(3, 4);
+
+    g.findBiConnectivity();
+    return 0;
+}
