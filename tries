@@ -1,216 +1,71 @@
-SPELL CHECK
 #include <iostream>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>
-
 using namespace std;
-
-// Trie Node Structure
-struct TrieNode {
+class TrieNode {
+public:
     unordered_map<char, TrieNode*> children;
     bool isEndOfWord;
-
-    TrieNode() : isEndOfWord(false) {}
+    TrieNode() {
+        isEndOfWord = false;
+    }
 };
-
-// Trie Class
 class Trie {
 private:
-    TrieNode* root;
-
+    TrieNode *root;
+    void autoCompleteHelper(TrieNode *node, string prefix, vector<string> &results) {
+        if (node->isEndOfWord) results.push_back(prefix);
+        for (auto &child : node->children)
+            autoCompleteHelper(child.second, prefix + child.first, results);
+    }
 public:
-    Trie() { root = new TrieNode(); }
-
-    // Insert word into Trie
-    void insert(const string& word) {
-        TrieNode* node = root;
+    Trie() {
+        root = new TrieNode();
+    }
+    void insert(const string &word) {
+        TrieNode *node = root;
         for (char ch : word) {
-            if (node->children.find(ch) == node->children.end()) {
+            if (node->children.find(ch) == node->children.end())
                 node->children[ch] = new TrieNode();
-            }
             node = node->children[ch];
         }
         node->isEndOfWord = true;
     }
-
-    // Search for an exact word in Trie
-    bool search(const string& word) {
-        TrieNode* node = root;
+    bool search(const string &word) {
+        TrieNode *node = root;
         for (char ch : word) {
-            if (node->children.find(ch) == node->children.end()) {
-                return false;
-            }
+            if (node->children.find(ch) == node->children.end()) return false;
             node = node->children[ch];
         }
         return node->isEndOfWord;
     }
-
-    // Helper function to calculate Levenshtein Distance
-    int levenshteinDistance(const string& a, const string& b) {
-        int m = a.size(), n = b.size();
-        vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));
-
-        for (int i = 0; i <= m; i++) dp[i][0] = i;
-        for (int j = 0; j <= n; j++) dp[0][j] = j;
-
-        for (int i = 1; i <= m; i++) {
-            for (int j = 1; j <= n; j++) {
-                if (a[i - 1] == b[j - 1])
-                    dp[i][j] = dp[i - 1][j - 1];
-                else
-                    dp[i][j] = 1 + min({dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]});
-            }
-        }
-        return dp[m][n];
-    }
-
-    // Suggest words based on Levenshtein Distance
-    void suggestHelper(TrieNode* node, string word, string current, vector<string>& suggestions, int threshold) {
-        if (!node) return;
-        if (node->isEndOfWord && levenshteinDistance(word, current) <= threshold) {
-            suggestions.push_back(current);
-        }
-
-        for (auto& pair : node->children) {
-            suggestHelper(pair.second, word, current + pair.first, suggestions, threshold);
-        }
-    }
-
-    vector<string> suggest(const string& word, int threshold = 2) {
-        vector<string> suggestions;
-        suggestHelper(root, word, "", suggestions, threshold);
-        return suggestions;
-    }
-};
-
-int main() {
-    Trie dictionary;
-    
-    // Sample words in dictionary
-    dictionary.insert("hello");
-    dictionary.insert("world");
-    dictionary.insert("help");
-    dictionary.insert("hell");
-    dictionary.insert("hero");
-    dictionary.insert("helicopter");
-
-    string word;
-    cout << "Enter a word to check: ";
-    cin >> word;
-
-    if (dictionary.search(word)) {
-        cout << word << " is spelled correctly.\n";
-    } else {
-        cout << word << " is misspelled. Suggestions:\n";
-        vector<string> suggestions = dictionary.suggest(word);
-        for (const string& suggestion : suggestions) {
-            cout << "- " << suggestion << endl;
-        }
-    }
-
-    return 0;
-}
-
-
-
-
-
-AUTO COMPLETE
-#include <iostream>
-#include <unordered_map>
-#include <vector>
-using namespace std;
-
-// Trie Node Structure
-struct TrieNode {
-    unordered_map<char, TrieNode*> children;
-    bool isEndOfWord;
-
-    TrieNode() : isEndOfWord(false) {}
-};
-
-// Trie Class
-class Trie {
-private:
-    TrieNode* root;
-
-public:
-    Trie() { root = new TrieNode(); }
-
-    // Insert word into Trie
-    void insert(const string& word) {
-        TrieNode* node = root;
-        for (char ch : word) {
-            if (node->children.find(ch) == node->children.end()) {
-                node->children[ch] = new TrieNode();
-            }
-            node = node->children[ch];
-        }
-        node->isEndOfWord = true;
-    }
-
-    // Search for the last node of the given prefix
-    TrieNode* searchPrefix(const string& prefix) {
-        TrieNode* node = root;
+vector<string> autoComplete(const string &prefix) {
+        TrieNode *node = root;
+        vector<string> results;
         for (char ch : prefix) {
-            if (node->children.find(ch) == node->children.end()) {
-                return nullptr;
-            }
+            if (node->children.find(ch) == node->children.end()) return results; 
             node = node->children[ch];
         }
-        return node;
-    }
-
-    // Helper function to collect words from a given node
-    void collectWords(TrieNode* node, string current, vector<string>& words) {
-        if (!node) return;
-        if (node->isEndOfWord) words.push_back(current);
-
-        for (auto& pair : node->children) {
-            collectWords(pair.second, current + pair.first, words);
-        }
-    }
-
-    // Autocomplete function
-    vector<string> autocomplete(const string& prefix) {
-        vector<string> suggestions;
-        TrieNode* node = searchPrefix(prefix);
-
-        if (node) {
-            collectWords(node, prefix, suggestions);
-        }
-
-        return suggestions;
+        autoCompleteHelper(node, prefix, results);
+        return results;
     }
 };
-
 int main() {
     Trie trie;
-
-    // Sample dictionary
-    trie.insert("hello");
-    trie.insert("hell");
-    trie.insert("help");
-    trie.insert("hero");
-    trie.insert("helicopter");
-    trie.insert("heaven");
-    trie.insert("heritage");
-
-    string prefix;
-    cout << "Enter a prefix: ";
-    cin >> prefix;
-
-    vector<string> suggestions = trie.autocomplete(prefix);
-
-    if (suggestions.empty()) {
-        cout << "No suggestions found.\n";
-    } else {
-        cout << "Autocomplete suggestions:\n";
-        for (const string& word : suggestions) {
-            cout << "- " << word << endl;
-        }
-    }
-
+    trie.insert("application");
+    trie.insert("auto");
+    trie.insert("bankai");
+    trie.insert("ballistic");
+    trie.insert("batman");
+    trie.insert("leaf");
+    string word = "aut";
+    cout << "Spellcheck for '" << word << "': " << (trie.search(word) ? "Found" : "Not Found") << endl;
+    word = "ballistic";
+    cout << "Spellcheck for '" << word << "': " << (trie.search(word) ? "Found" : "Not Found") << endl;
+    string prefix = "bank";
+    cout << "\nAuto-complete suggestions for prefix '" << prefix << "':" << endl;
+    vector<string> suggestions = trie.autoComplete(prefix);
+    for (const string &s : suggestions) 
+        cout << s << endl;
     return 0;
 }
